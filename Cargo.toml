@@ -212,8 +212,7 @@ safetensors = "0.4"
 # (a transitive dep of lr-coding-agents → executors → codex-protocol → starlark)
 # directly depends on hashbrown 0.14.3. The mismatch causes:
 #   error[E0277]: the trait bound `HashTable<usize>: Allocative` is not satisfied
-# Remove this patch when executors/starlark is updated to use starlark 0.14.x.
-[patch.crates-io]
+# Remove this when executors/starlark is updated to use starlark 0.14.x.
 allocative = "=0.3.4"
 
 [profile.release]

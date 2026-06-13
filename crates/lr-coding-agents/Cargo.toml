@@ -18,6 +18,7 @@ tokio = { workspace = true }
 tokio-util = { workspace = true }
 uuid = { workspace = true }
 dashmap = { workspace = true }
+allocative = { workspace = true }
 async-trait = { workspace = true }
 thiserror = { workspace = true }
 which = { workspace = true }
