@@ -82,16 +82,20 @@ jobs:
           echo "tags=$TAGS" >> "$GITHUB_OUTPUT"
           echo "Tags: $TAGS"
 
+      - name: Set up QEMU for multi-arch
+        uses: docker/setup-qemu-action@v3
+
       - name: Build and push
         uses: docker/build-push-action@v6
         with:
           context: .
           file: ./Dockerfile
-          platforms: linux/amd64
+          platforms: linux/amd64,linux/arm64
           push: true
           tags: ${{ steps.tags.outputs.tags }}
           build-args: |
             APPIMAGE_URL=${{ steps.ver.outputs.appimage_url }}
+            VERSION=${{ steps.ver.outputs.version }}
           labels: |
             org.opencontainers.image.source=https://github.com/${{ github.repository }}
             org.opencontainers.image.version=${{ steps.ver.outputs.version }}
@@ -102,4 +106,4 @@ jobs:
         run: |
           echo "✅ Pushed ${IMAGE_NAME}:${{ steps.ver.outputs.version }}"
           echo "Tags: ${{ steps.tags.outputs.tags }}"
-          echo "AppImage source: ${{ steps.ver.outputs.appimage_url }}"
+          echo "Platforms: linux/amd64, linux/arm64"

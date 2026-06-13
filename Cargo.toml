@@ -207,6 +207,15 @@ tokenizers = "0.22"
 hf-hub = { version = "0.4", features = ["tokio"] }
 safetensors = "0.4"
 
+# Force allocative 0.3.4 (not 0.3.6) to keep hashbrown at 0.14.x.
+# allocative 0.3.6 upgrades hashbrown to ^0.16, but starlark_map 0.13
+# (a transitive dep of lr-coding-agents → executors → codex-protocol → starlark)
+# directly depends on hashbrown 0.14.3. The mismatch causes:
+#   error[E0277]: the trait bound `HashTable<usize>: Allocative` is not satisfied
+# Remove this patch when executors/starlark is updated to use starlark 0.14.x.
+[patch.crates-io]
+allocative = "=0.3.4"
+
 [profile.release]
 opt-level = "z"
 lto = true

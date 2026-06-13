@@ -13,10 +13,14 @@
 # ---- Stage 1: download the AppImage --------------------------------------
 FROM debian:bookworm-slim AS downloader
 
-# Default to the version-agnostic stable URL produced by release.yml so a plain
-# `docker build .` works without arguments. CI overrides this with the exact
-# versioned URL of the release that just published.
-ARG APPIMAGE_URL=https://github.com/LocalRouter/LocalRouter/releases/latest/download/LocalRouter_amd64.AppImage
+# TARGETARCH is automatically set by Docker Buildx during multi-platform builds
+# (values: "amd64", "arm64"). Falls back to "amd64" for plain docker build.
+ARG TARGETARCH
+
+# Per-architecture AppImage URLs. CI passes versioned URLs; for ad-hoc builds
+# without build args the fallback constructs the URL from VERSION + TARGETARCH.
+ARG APPIMAGE_URL=
+ARG VERSION=
 
 RUN apt-get update \
     && apt-get install -y --no-install-recommends curl ca-certificates \
@@ -24,7 +28,15 @@ RUN apt-get update \
 
 WORKDIR /tmp/dl
 RUN set -eux; \
-    curl -fL --retry 5 --retry-delay 5 -o LocalRouter.AppImage "$APPIMAGE_URL"; \
+    ARCH="${TARGETARCH:-amd64}"; \
+    if [ -n "$APPIMAGE_URL" ]; then \
+        URL="$APPIMAGE_URL"; \
+    elif [ -n "$VERSION" ]; then \
+        URL="https://github.com/LocalRouter/LocalRouter/releases/download/v${VERSION}/LocalRouter_${VERSION}_${ARCH}.AppImage"; \
+    else \
+        URL="https://github.com/LocalRouter/LocalRouter/releases/latest/download/LocalRouter_${ARCH}.AppImage"; \
+    fi; \
+    curl -fL --retry 5 --retry-delay 5 -o LocalRouter.AppImage "$URL"; \
     chmod +x LocalRouter.AppImage
 
 # ---- Stage 2: runtime ----------------------------------------------------

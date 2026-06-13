@@ -124,8 +124,7 @@ versions inherit that setting automatically.
 ## Limitations and roadmap
 
 - Linux hosts only (X11 forwarding requirement).
-- linux/amd64 only — multi-arch (linux/arm64) support depends on adding
-  aarch64 Linux to the release CI matrix.
+- linux/amd64 and linux/arm64 (multi-arch image published to GHCR).
 - A true headless `--server-only` mode (no Tauri/webview) and a corresponding
   slim image are tracked as future work — they would make the image runnable
   on macOS, Windows, and ARM hosts as a server-only API gateway.

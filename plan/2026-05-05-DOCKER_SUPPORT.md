@@ -12,12 +12,11 @@ Community contributor `supertorpe` filed [issue #5](https://github.com/LocalRout
 1. `Dockerfile` at repo root — refined version of supertorpe's proposal.
 2. `docker-entrypoint.sh` — ensures `server.host: 0.0.0.0` on first boot so users don't have to edit `settings.yaml` and restart (the issue's main rough edge).
 3. `.dockerignore` — keep build context small.
-4. `.github/workflows/docker.yml` — builds image on release publication, pushes to `ghcr.io/localrouter/localrouter:<version>` and `:latest`. linux/amd64 only (CI does not currently build aarch64 Linux).
+4. `.github/workflows/docker.yml` — builds image on release publication, pushes to `ghcr.io/localrouter/localrouter:<version>` and `:latest`. linux/amd64 + linux/arm64 multi-arch image.
 5. README "Docker" section + brief `docs/DOCKER.md` covering X11 forwarding, persistent volume, and the macOS/Windows host caveat.
 
 ### Out of scope (future work, do not bundle here)
 - Headless `--server-only` mode + slim Alpine image.
-- linux/arm64 builds (would need an `aarch64-unknown-linux-gnu` matrix entry in `release.yml`).
 - VNC/Xvfb-in-image fallback for non-Linux Docker hosts.
 - Docker Hub mirror.
 
