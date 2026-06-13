@@ -92,6 +92,9 @@ jobs:
           - platform: ubuntu-22.04
             target: x86_64-unknown-linux-gnu
             bundles: deb,appimage
+          - platform: ubuntu-24.04-arm
+            target: aarch64-unknown-linux-gnu
+            bundles: deb,appimage
           - platform: windows-latest
             target: x86_64-pc-windows-msvc
             bundles: msi,nsis
@@ -263,6 +266,17 @@ jobs:
             done
           fi
 
+          # --- Linux ARM64 ---
+          LINUX_ARM_DIR="artifacts/artifacts-aarch64-unknown-linux-gnu"
+          if [ -d "$LINUX_ARM_DIR" ]; then
+            find "$LINUX_ARM_DIR" -type f -name "*.AppImage" ! -name "*.tar.gz" | while read f; do
+              cp "$f" "release-assets/LocalRouter_${VERSION}_arm64.AppImage"
+            done
+            find "$LINUX_ARM_DIR" -type f -name "*.deb" | while read f; do
+              cp "$f" "release-assets/LocalRouter_${VERSION}_arm64.deb"
+            done
+          fi
+
           # --- Windows ---
           WIN_DIR="artifacts/artifacts-x86_64-pc-windows-msvc"
           if [ -d "$WIN_DIR" ]; then
@@ -294,6 +308,8 @@ jobs:
           for f in *_x64_en-US.msi; do [ -f "$f" ] && cp "$f" "LocalRouter_x64.msi"; done
           for f in *_amd64.deb; do [ -f "$f" ] && cp "$f" "LocalRouter_amd64.deb"; done
           for f in *_amd64.AppImage; do [ -f "$f" ] && cp "$f" "LocalRouter_amd64.AppImage"; done
+          for f in *_arm64.deb; do [ -f "$f" ] && cp "$f" "LocalRouter_arm64.deb"; done
+          for f in *_arm64.AppImage; do [ -f "$f" ] && cp "$f" "LocalRouter_arm64.AppImage"; done
           cd ..
 
           echo "Release assets prepared:"
