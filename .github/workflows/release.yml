@@ -282,6 +282,7 @@ jobs:
               cp "$f" "release-assets/LocalRouter_${VERSION}_arm64.AppImage.tar.gz.sig"
             done
           fi
+          fi
 
           # --- Windows ---
           WIN_DIR="artifacts/artifacts-x86_64-pc-windows-msvc"
