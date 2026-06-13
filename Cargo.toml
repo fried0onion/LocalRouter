@@ -214,3 +214,6 @@ codegen-units = 1
 panic = "abort"
 # Use "debuginfo" instead of true to preserve __TAURI_BUNDLE_TYPE symbol for updater
 strip = "debuginfo"
+
+[patch.crates-io]
+hashbrown = { version = "0.14" }
