@@ -216,4 +216,4 @@ panic = "abort"
 strip = "debuginfo"
 
 [patch.crates-io]
-hashbrown = { version = "0.14" }
+hashbrown = { version = "0.14.5" }
