@@ -725,7 +725,7 @@ impl CodingAgentManager {
         .map_err(|e| CodingAgentError::IoError(format!("discovery join: {e}")))?;
 
         // Sort newest-first; truncate to limit.
-        all.sort_by(|a, b| b.last_active_at.cmp(&a.last_active_at));
+        all.sort_by_key(|b| std::cmp::Reverse(b.last_active_at));
         let limit = if filter.limit == 0 {
             crate::discovery::DEFAULT_LIMIT
         } else {
