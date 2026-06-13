@@ -56,7 +56,6 @@ jobs:
           fi
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
           echo "is_prerelease=$IS_PRERELEASE" >> "$GITHUB_OUTPUT"
-          echo "appimage_url=https://github.com/${{ github.repository }}/releases/download/v${VERSION}/LocalRouter_${VERSION}_amd64.AppImage" >> "$GITHUB_OUTPUT"
           echo "Resolved version: $VERSION (prerelease=$IS_PRERELEASE)"
 
       - name: Set up Docker Buildx
@@ -94,7 +93,6 @@ jobs:
           push: true
           tags: ${{ steps.tags.outputs.tags }}
           build-args: |
-            APPIMAGE_URL=${{ steps.ver.outputs.appimage_url }}
             VERSION=${{ steps.ver.outputs.version }}
           labels: |
             org.opencontainers.image.source=https://github.com/${{ github.repository }}
