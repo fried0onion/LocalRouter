@@ -214,6 +214,9 @@ safetensors = "0.4"
 #   error[E0277]: the trait bound `HashTable<usize>: Allocative` is not satisfied
 # Remove this when executors/starlark is updated to use starlark 0.14.x.
 allocative = "=0.3.4"
+# Pin alloc-no-stdlib to v2 to match brotli 8.0.3's requirement.
+# alloc-stdlib 0.2.3 pulls in v3, causing a trait conflict for StandardAlloc.
+alloc-no-stdlib = "=2.0.4"
 
 [profile.release]
 opt-level = "z"
@@ -222,3 +225,11 @@ codegen-units = 1
 panic = "abort"
 # Use "debuginfo" instead of true to preserve __TAURI_BUNDLE_TYPE symbol for updater
 strip = "debuginfo"
+
+[patch.crates-io]
+# Force a single version of alloc-no-stdlib to fix a transitive version
+# conflict between brotli 8.0.3 (wants v2) and alloc-stdlib 0.2.3 (pulls v3).
+# Without this, two copies define the same Allocator trait, and StandardAlloc
+# can't implement both, causing:
+#   error[E0277]: the trait bound `StandardAlloc: Allocator<u8>` is not satisfied
+alloc-no-stdlib = "=2.0.4"
