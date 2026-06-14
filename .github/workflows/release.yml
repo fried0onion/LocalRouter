@@ -83,12 +83,6 @@ jobs:
       fail-fast: false
       matrix:
         settings:
-          - platform: macos-latest
-            target: x86_64-apple-darwin
-            bundles: app,dmg
-          - platform: macos-latest
-            target: aarch64-apple-darwin
-            bundles: app,dmg
           - platform: ubuntu-22.04
             target: x86_64-unknown-linux-gnu
             bundles: deb,appimage
@@ -146,51 +140,12 @@ jobs:
       - name: Install frontend dependencies
         run: npm ci
 
-      - name: Install Apple certificate (macOS)
-        if: matrix.settings.platform == 'macos-latest'
-        env:
-          APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
-          APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
-        run: |
-          # Create temporary keychain
-          KEYCHAIN_PATH=$RUNNER_TEMP/app-signing.keychain-db
-          KEYCHAIN_PASSWORD=$(openssl rand -base64 32)
-
-          # Decode certificate
-          echo "$APPLE_CERTIFICATE" | base64 --decode > $RUNNER_TEMP/certificate.p12
-
-          # Create and configure keychain
-          security create-keychain -p "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
-          security set-keychain-settings -lut 21600 $KEYCHAIN_PATH
-          security unlock-keychain -p "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
-
-          # Import certificate
-          security import $RUNNER_TEMP/certificate.p12 -P "$APPLE_CERTIFICATE_PASSWORD" -A -t cert -f pkcs12 -k $KEYCHAIN_PATH
-          security set-key-partition-list -S apple-tool:,apple: -k "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
-          security list-keychain -d user -s $KEYCHAIN_PATH
-
-          # Clean up
-          rm $RUNNER_TEMP/certificate.p12
-
       - name: Build Tauri app (with signing)
         env:
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          # Apple code signing (macOS only)
-          APPLE_SIGNING_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY }}
-          APPLE_ID: ${{ secrets.APPLE_ID }}
-          APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
-          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
         run: npm run tauri build -- --target ${{ matrix.settings.target }} --bundles ${{ matrix.settings.bundles }}
-
-      - name: Cleanup keychain (macOS)
-        if: always() && matrix.settings.platform == 'macos-latest'
-        run: |
-          KEYCHAIN_PATH=$RUNNER_TEMP/app-signing.keychain-db
-          if [ -f "$KEYCHAIN_PATH" ]; then
-            security delete-keychain $KEYCHAIN_PATH || true
-          fi
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
@@ -231,24 +186,6 @@ jobs:
           # To avoid depending on the exact productName, we rename all updater artifacts to a consistent
           # "LocalRouter_${VERSION}_<arch>.<ext>" pattern based on which target artifact directory they came from.
 
-          # --- macOS ---
-          for arch_dir in artifacts/artifacts-x86_64-apple-darwin artifacts/artifacts-aarch64-apple-darwin; do
-            if [ ! -d "$arch_dir" ]; then continue; fi
-            if echo "$arch_dir" | grep -q "x86_64"; then ARCH="x64"; else ARCH="aarch64"; fi
-
-            # Installers (.dmg)
-            find "$arch_dir" -type f -name "*.dmg" | while read f; do
-              cp "$f" "release-assets/LocalRouter_${VERSION}_${ARCH}.dmg"
-            done
-            # Updater bundles (.app.tar.gz + .sig)
-            find "$arch_dir" -type f -name "*.app.tar.gz" ! -name "*.sig" | while read f; do
-              cp "$f" "release-assets/LocalRouter_${VERSION}_${ARCH}.app.tar.gz"
-            done
-            find "$arch_dir" -type f -name "*.app.tar.gz.sig" | while read f; do
-              cp "$f" "release-assets/LocalRouter_${VERSION}_${ARCH}.app.tar.gz.sig"
-            done
-          done
-
           # --- Linux (x86_64) ---
           LINUX_DIR="artifacts/artifacts-x86_64-unknown-linux-gnu"
           if [ -d "$LINUX_DIR" ]; then
@@ -282,7 +219,6 @@ jobs:
               cp "$f" "release-assets/LocalRouter_${VERSION}_arm64.AppImage.tar.gz.sig"
             done
           fi
-          fi
 
           # --- Windows ---
           WIN_DIR="artifacts/artifacts-x86_64-pc-windows-msvc"
@@ -309,8 +245,6 @@ jobs:
 
           # Create version-agnostic copies for stable download URLs
           cd release-assets
-          for f in *_aarch64.dmg; do [ -f "$f" ] && cp "$f" "LocalRouter_aarch64.dmg"; done
-          for f in *_x64.dmg; do [ -f "$f" ] && cp "$f" "LocalRouter_x64.dmg"; done
           for f in *_x64-setup.exe; do [ -f "$f" ] && cp "$f" "LocalRouter_x64-setup.exe"; done
           for f in *_x64_en-US.msi; do [ -f "$f" ] && cp "$f" "LocalRouter_x64.msi"; done
           for f in *_amd64.deb; do [ -f "$f" ] && cp "$f" "LocalRouter_amd64.deb"; done
@@ -363,8 +297,6 @@ jobs:
             fi
           }
 
-          MACOS_X64_SIG=$(get_sig "LocalRouter_${VERSION}_x64.app.tar.gz.sig")
-          MACOS_AARCH64_SIG=$(get_sig "LocalRouter_${VERSION}_aarch64.app.tar.gz.sig")
           LINUX_SIG=$(get_sig "LocalRouter_${VERSION}_amd64.AppImage.tar.gz.sig")
           LINUX_ARM64_SIG=$(get_sig "LocalRouter_${VERSION}_arm64.AppImage.tar.gz.sig")
           WINDOWS_MSI_SIG=$(get_sig "LocalRouter_${VERSION}_x64_en-US.msi.zip.sig")
@@ -375,14 +307,6 @@ jobs:
             "notes": ${NOTES_JSON},
             "pub_date": "${PUB_DATE}",
             "platforms": {
-              "darwin-x86_64": {
-                "signature": "${MACOS_X64_SIG}",
-                "url": "${BASE_URL}/LocalRouter_${VERSION}_x64.app.tar.gz"
-              },
-              "darwin-aarch64": {
-                "signature": "${MACOS_AARCH64_SIG}",
-                "url": "${BASE_URL}/LocalRouter_${VERSION}_aarch64.app.tar.gz"
-              },
               "linux-x86_64": {
                 "signature": "${LINUX_SIG}",
                 "url": "${BASE_URL}/LocalRouter_${VERSION}_amd64.AppImage.tar.gz"
