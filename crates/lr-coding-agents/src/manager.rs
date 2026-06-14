@@ -762,17 +762,21 @@ impl CodingAgentManager {
         // Each session contributes two needles in the order
         // [agent_session_id, "<id>.jsonl"]. Promote LivePid from either.
         for (idx, sess) in all.iter_mut().enumerate() {
-            let a = liveness_pairs.get(idx * 2).cloned().unwrap_or(crate::discovery::Liveness::Unknown);
-            let b = liveness_pairs.get(idx * 2 + 1).cloned().unwrap_or(crate::discovery::Liveness::Unknown);
+            let a = liveness_pairs
+                .get(idx * 2)
+                .cloned()
+                .unwrap_or(crate::discovery::Liveness::Unknown);
+            let b = liveness_pairs
+                .get(idx * 2 + 1)
+                .cloned()
+                .unwrap_or(crate::discovery::Liveness::Unknown);
             sess.liveness = match (a, b) {
                 (crate::discovery::Liveness::LivePid { pid }, _)
                 | (_, crate::discovery::Liveness::LivePid { pid }) => {
                     crate::discovery::Liveness::LivePid { pid }
                 }
                 (crate::discovery::Liveness::NotFound, _)
-                | (_, crate::discovery::Liveness::NotFound) => {
-                    crate::discovery::Liveness::NotFound
-                }
+                | (_, crate::discovery::Liveness::NotFound) => crate::discovery::Liveness::NotFound,
                 _ => crate::discovery::Liveness::Unknown,
             };
         }
